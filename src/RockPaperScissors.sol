@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
+pragma solidity ^0.8.21;
+import 
 contract RockPaperScissors {
     enum Choice {
         None,
@@ -23,6 +23,7 @@ contract RockPaperScissors {
         Choice bankerChoice;
         Choice playerChoice;
         GameStatus status;
+        address payable winner;
     }
 
     mapping(uint256 => Game) public games;
@@ -60,7 +61,8 @@ contract RockPaperScissors {
             bankerChoiceHash: choiceHash,
             bankerChoice: Choice.None,
             playerChoice: Choice.None,
-            status: GameStatus.Created
+            status: GameStatus.Created,
+            winner: payable(address(0))
         });
 
         emit GameCreated(gameCounter, msg.sender, msg.value);
@@ -87,7 +89,7 @@ contract RockPaperScissors {
     function revealChoice(
         uint256 gameId,
         Choice bankerChoice,
-        bytes32 secret
+        string memory secret
     ) external onlyBanker(gameId) {
         Game storage game = games[gameId];
         require(
@@ -129,17 +131,40 @@ contract RockPaperScissors {
                 game.playerChoice == Choice.Rock)
         ) {
             // Banker wins
-            winner = game.banker;
+            game.winner = game.banker;
         } else {
             // Player wins
-            winner = game.player;
-        }
-
-        if (winner != address(0)) {
-            winner.transfer(game.stake * 2);
-            emit GameFinished(gameId, winner, game.stake * 2);
+            game.winner = game.player;
         }
 
         game.status = GameStatus.Finished;
+    }
+    function withdrawFunds(uint256 gameId) external {
+        Game storage game = games[gameId];
+        require(game.winner != address(0), "Game is not concluded yet");
+        require(msg.sender == game.winner, "Only winner can withdraw funds");
+        uint256 reward = game.stake * 2;
+        game.stake = 0; // Prevent re-entrancy
+        payable(game.winner).transfer(reward);
+    }
+
+    function getActiveGames() external view returns (Game[] memory) {
+        uint256 activeGameCount;
+        for (uint256 i = 1; i <= gameCounter; i++) {
+            if (games[i].winner == address(0)) {
+                activeGameCount++;
+            }
+        }
+
+        Game[] memory activeGames = new Game[](activeGameCount);
+        uint256 index;
+        for (uint256 i = 1; i <= gameCounter; i++) {
+            if (games[i].winner == address(0)) {
+                activeGames[index] = games[i];
+                index++;
+            }
+        }
+
+        return activeGames;
     }
 }
