@@ -7,7 +7,20 @@ import "forge-std/console.sol";
 
 contract Deploy is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        console.log(vm.envString("NETWORK"));
+
+        uint256 deployerPrivateKey;
+        string memory network = vm.envString("NETWORK");
+
+        if (
+            keccak256(abi.encodePacked(network)) ==
+            keccak256(abi.encodePacked("sepolia"))
+        ) {
+            deployerPrivateKey = vm.envUint("SEPOLIA_PRIVATE_KEY");
+        } else {
+            deployerPrivateKey = vm.envUint("LOCAL_PRIVATE_KEY");
+        }
+
         vm.startBroadcast(deployerPrivateKey);
         RockPaperScissors rockPaperScissors = new RockPaperScissors();
         console.log(address(rockPaperScissors));

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
-import 
 contract RockPaperScissors {
     enum Choice {
         None,
@@ -97,7 +96,7 @@ contract RockPaperScissors {
             "Game is not ready for reveal"
         );
         require(
-            keccak256(abi.encodePacked(bankerChoice, secret)) ==
+            keccak256(abi.encodePacked(uint8(bankerChoice), secret)) ==
                 game.bankerChoiceHash,
             "Invalid reveal"
         );

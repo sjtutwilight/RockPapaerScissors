@@ -68,39 +68,41 @@ contract RockPaperScissorsTest is Test {
     //     assertEq(uint(status), uint(RockPaperScissors.GameStatus.Joined));
     // }
 
-    // function testRevealChoiceAndFinishGame() public {
-    //     bytes32 choiceHash = keccak256(
-    //         abi.encodePacked(RockPaperScissors.Choice.Rock, "secret")
-    //     );
+    function testRevealChoiceAndFinishGame() public {
+        bytes32 choiceHash = keccak256(
+            abi.encodePacked(RockPaperScissors.Choice.Rock, "1")
+        );
 
-    //     vm.deal(address(this), 1 ether);
-    //     vm.prank(address(this));
-    //     game.createGame{value: 1 ether}(choiceHash);
+        vm.deal(address(this), 1 ether);
+        vm.prank(address(this));
+        game.createGame{value: 1 ether}(choiceHash);
 
-    //     vm.deal(address(0x123), 1 ether);
-    //     vm.prank(address(0x123));
-    //     game.joinGame{value: 1 ether}(1, RockPaperScissors.Choice.Scissors);
-    //     vm.prank(address(this));
+        vm.deal(address(0x123), 1 ether);
+        vm.prank(address(0x123));
+        game.joinGame{value: 1 ether}(1, RockPaperScissors.Choice.Scissors);
+        vm.prank(address(this));
 
-    //     game.revealChoice(1, RockPaperScissors.Choice.Rock, "secret");
+        game.revealChoice(1, RockPaperScissors.Choice.Rock, "1");
 
-    //     (
-    //         address banker,
-    //         address player,
-    //         uint256 stake,
-    //         bytes32 bankerChoiceHash,
-    //         RockPaperScissors.Choice bankerChoice,
-    //         RockPaperScissors.Choice playerChoice,
-    //         RockPaperScissors.GameStatus status
-    //     ) = game.games(1);
+        (
+            address banker,
+            address player,
+            uint256 stake,
+            bytes32 bankerChoiceHash,
+            RockPaperScissors.Choice bankerChoice,
+            RockPaperScissors.Choice playerChoice,
+            RockPaperScissors.GameStatus status,
+            address winner
+        ) = game.games(1);
+        console.logBytes32(choiceHash);
+        assertEq(uint(bankerChoice), uint(RockPaperScissors.Choice.Rock));
+        assertEq(uint(playerChoice), uint(RockPaperScissors.Choice.Scissors));
+        assertEq(uint(status), uint(RockPaperScissors.GameStatus.Finished));
 
-    //     assertEq(uint(bankerChoice), uint(RockPaperScissors.Choice.Rock));
-    //     assertEq(uint(playerChoice), uint(RockPaperScissors.Choice.Scissors));
-    //     assertEq(uint(status), uint(RockPaperScissors.GameStatus.Finished));
-
-    //     // Checking balances to ensure the winner is correctly rewarded
-    //     assertEq(address(this).balance, 2 ether);
-    //     assertEq(address(0x123).balance, 0 ether);
-    // }
-    // fallback() external payable {}
+        // Checking balances to ensure the winner is correctly rewarded
+        // assertEq(address(this).balance, 2 ether);
+        // assertEq(address(0x123).balance, 0 ether);
+        assertEq(address(this), winner);
+    }
+    fallback() external payable {}
 }
